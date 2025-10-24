@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Friction Calc">
     <link rel="manifest" href="manifest.json">
-    <title>Friction Calculator - Delaware Basin</title>
+    <title>Friction Calculator - 3D Wellbore</title>
     <style>
         * {
             margin: 0;
@@ -38,9 +38,6 @@
         .app-header h1 {
             font-size: 1.4em;
             color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .app-header .subtitle {
@@ -115,9 +112,6 @@
             font-size: 1.2em;
             color: #2c3e50;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         
         .control-group {
@@ -173,62 +167,77 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        /* Wellbore Visualization */
-        .wellbore-container {
+        /* 3D Wellbore Canvas */
+        .wellbore-3d-container {
             position: relative;
             width: 100%;
-            height: 400px;
-            background: linear-gradient(to bottom, #e3f2fd 0%, #90caf9 100%);
-            border-radius: 10px;
+            height: 450px;
+            background: #1a1a1a;
+            border-radius: 15px;
             overflow: hidden;
             margin: 20px 0;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }
         
-        .wellbore-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .wellbore-canvas-3d {
             width: 100%;
             height: 100%;
+            display: block;
+            touch-action: none;
         }
         
-        .wellbore-legend {
+        .wellbore-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.75em;
+        }
+        
+        .pressure-legend {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            background: rgba(255,255,255,0.9);
-            padding: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px;
             border-radius: 8px;
-            font-size: 0.75em;
+            color: white;
+            font-size: 0.8em;
         }
         
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 4px 0;
+        .legend-gradient {
+            width: 120px;
+            height: 20px;
+            background: linear-gradient(to right, 
+                rgb(0, 0, 255),
+                rgb(0, 255, 255),
+                rgb(0, 255, 0),
+                rgb(255, 255, 0),
+                rgb(255, 165, 0),
+                rgb(255, 0, 0));
+            border-radius: 4px;
+            margin: 8px 0;
         }
         
-        .legend-color {
-            width: 20px;
-            height: 12px;
-            border-radius: 3px;
-        }
-        
-        .pressure-gradient-bar {
-            height: 30px;
-            background: linear-gradient(to right, #2196f3, #4caf50, #ffeb3b, #ff9800, #f44336);
-            border-radius: 5px;
-            margin: 10px 0;
-            position: relative;
-        }
-        
-        .gradient-labels {
+        .legend-labels {
             display: flex;
             justify-content: space-between;
+            font-size: 0.85em;
+        }
+        
+        .segment-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
             font-size: 0.75em;
-            color: #666;
-            margin-top: 5px;
+            max-width: 150px;
         }
         
         .pressure-display {
@@ -268,13 +277,11 @@
             opacity: 0.9;
             margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
         .pressure-card .value {
             font-size: 2em;
             font-weight: bold;
-            margin-bottom: 2px;
         }
         
         .pressure-card .unit {
@@ -340,16 +347,6 @@
             color: #721c24;
         }
         
-        .equation-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-            margin: 15px 0;
-        }
-        
         .quick-presets {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -392,33 +389,23 @@
             font-size: 0.85em;
             line-height: 1.5;
         }
-        
-        @media (max-width: 400px) {
-            .pressure-display {
-                grid-template-columns: 1fr;
-            }
-            
-            .results-grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="install-prompt" id="installPrompt">
-        Tap here to install as an app on your home screen
+        Tap here to install as an app
     </div>
     
     <div class="app-header">
-        <h1>Friction Calculator</h1>
-        <div class="subtitle">Delaware Basin - Hydraulic Fracturing</div>
+        <h1>3D Friction Calculator</h1>
+        <div class="subtitle">Delaware Basin - Pressure Heat Map</div>
     </div>
     
     <div class="container">
         <!-- Tab Navigation -->
         <div class="tab-navigation">
             <button class="tab-button active" onclick="switchTab('inputs')">Inputs</button>
-            <button class="tab-button" onclick="switchTab('wellbore')">Wellbore</button>
+            <button class="tab-button" onclick="switchTab('wellbore')">3D View</button>
             <button class="tab-button" onclick="switchTab('results')">Results</button>
             <button class="tab-button" onclick="switchTab('info')">Info</button>
         </div>
@@ -512,46 +499,52 @@
             </div>
         </div>
         
-        <!-- Wellbore Tab -->
+        <!-- 3D Wellbore Tab -->
         <div id="wellboreTab" class="tab-content">
             <div class="card">
-                <h2>Pressure Distribution - Wellbore</h2>
+                <h2>3D Wellbore - Pressure Heat Map</h2>
                 
-                <div class="wellbore-container">
-                    <canvas id="wellboreCanvas" class="wellbore-canvas"></canvas>
-                    <div class="wellbore-legend">
-                        <div style="font-weight: bold; margin-bottom: 5px;">Pressure (psi)</div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #2196f3;"></div>
-                            <span id="legendLow">Low</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #ffeb3b;"></div>
-                            <span id="legendMid">Medium</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #f44336;"></div>
-                            <span id="legendHigh">High</span>
-                        </div>
-                    </div>
+                <div class="info-section">
+                    <p style="margin: 0;">
+                        <strong>Swipe or drag</strong> to rotate the 3D view. Each colored segment shows the predicted pressure at that location along the wellbore.
+                    </p>
                 </div>
                 
-                <div style="margin-top: 15px;">
-                    <strong>Pressure Gradient Scale</strong>
-                    <div class="pressure-gradient-bar"></div>
-                    <div class="gradient-labels">
-                        <span id="gradientMin">0 psi</span>
-                        <span id="gradientMax">12,000 psi</span>
+                <div class="wellbore-3d-container">
+                    <canvas id="wellboreCanvas3D" class="wellbore-canvas-3d"></canvas>
+                    
+                    <div class="wellbore-controls">
+                        <strong>Controls:</strong><br>
+                        Drag to rotate<br>
+                        Pinch to zoom
+                    </div>
+                    
+                    <div class="segment-info" id="segmentInfo">
+                        <strong>Wellbore Info</strong><br>
+                        Segments: <span id="segmentCount">100</span><br>
+                        Max Pressure: <span id="maxPressure">12,557</span> psi
+                    </div>
+                    
+                    <div class="pressure-legend">
+                        <strong>Pressure Scale</strong>
+                        <div class="legend-gradient"></div>
+                        <div class="legend-labels">
+                            <span id="legendMin">4,000</span>
+                            <span id="legendMax">12,500</span>
+                        </div>
+                        <div style="margin-top: 5px; font-size: 0.9em;">
+                            Blue=Low | Red=High
+                        </div>
                     </div>
                 </div>
                 
                 <div class="info-section" style="margin-top: 15px;">
-                    <h3>Understanding the Visualization</h3>
+                    <h3>Understanding the 3D View</h3>
                     <p>
-                        <strong>Blue (Low Pressure):</strong> Near the toe of the wellbore<br>
-                        <strong>Yellow/Orange (Medium):</strong> Mid-lateral section<br>
-                        <strong>Red (High Pressure):</strong> Near surface and heel<br><br>
-                        The color gradient shows cumulative pressure buildup from friction as fluid travels through the wellbore.
+                        The wellbore is divided into <strong>100 segments</strong>. Each segment is colored based on the predicted pressure:<br><br>
+                        <strong>Blue segments</strong> = Lower pressure (formation + hydrostatic)<br>
+                        <strong>Green/Yellow</strong> = Medium pressure (friction building)<br>
+                        <strong>Orange/Red</strong> = High pressure (near surface)
                     </p>
                 </div>
             </div>
@@ -631,69 +624,67 @@
         <!-- Info Tab -->
         <div id="infoTab" class="tab-content">
             <div class="card">
-                <h2>Delaware Basin Typical Values</h2>
+                <h2>Delaware Basin Values</h2>
                 
                 <div class="info-section">
                     <h3>Wolfcamp Formation</h3>
                     <p>
-                        <strong>TVD:</strong> 8,500 - 11,000 ft<br>
-                        <strong>Lateral:</strong> 7,500 - 12,000 ft<br>
-                        <strong>ISIP:</strong> 6,500 - 8,000 psi<br>
-                        <strong>Rate:</strong> 80 - 110 BPM<br>
-                        <strong>Proppant:</strong> 1,500 - 2,500 lbs/ft
+                        TVD: 8,500-11,000 ft | Lateral: 7,500-12,000 ft<br>
+                        ISIP: 6,500-8,000 psi | Rate: 80-110 BPM
                     </p>
                 </div>
                 
                 <div class="info-section">
-                    <h3>Bone Spring Formation</h3>
+                    <h3>Bone Spring</h3>
                     <p>
-                        <strong>TVD:</strong> 7,000 - 9,500 ft<br>
-                        <strong>Lateral:</strong> 8,000 - 11,000 ft<br>
-                        <strong>ISIP:</strong> 5,500 - 7,500 psi<br>
-                        <strong>Rate:</strong> 85 - 105 BPM<br>
-                        <strong>Proppant:</strong> 1,800 - 2,800 lbs/ft
+                        TVD: 7,000-9,500 ft | Lateral: 8,000-11,000 ft<br>
+                        ISIP: 5,500-7,500 psi | Rate: 85-105 BPM
                     </p>
                 </div>
                 
                 <div class="info-section">
                     <h3>Avalon Shale</h3>
                     <p>
-                        <strong>TVD:</strong> 9,500 - 12,000 ft<br>
-                        <strong>Lateral:</strong> 7,000 - 10,000 ft<br>
-                        <strong>ISIP:</strong> 7,000 - 8,500 psi<br>
-                        <strong>Rate:</strong> 75 - 100 BPM<br>
-                        <strong>Proppant:</strong> 1,200 - 2,000 lbs/ft
+                        TVD: 9,500-12,000 ft | Lateral: 7,000-10,000 ft<br>
+                        ISIP: 7,000-8,500 psi | Rate: 75-100 BPM
                     </p>
                 </div>
             </div>
             
             <div class="card">
-                <h2>Key Equations</h2>
+                <h2>About the 3D Visualization</h2>
                 
-                <div class="equation-box">
-                    <strong>Hydrostatic Pressure:</strong><br>
-                    P = 0.052 × ρ × TVD
+                <div class="info-section">
+                    <h3>Discretization</h3>
+                    <p>
+                        The wellbore is divided into 100 segments. Each segment's pressure is calculated based on:
+                        <br>• Distance from surface
+                        <br>• Accumulated friction
+                        <br>• Hydrostatic pressure
+                        <br>• Formation pressure
+                    </p>
                 </div>
                 
-                <div class="equation-box">
-                    <strong>Darcy-Weisbach:</strong><br>
-                    ΔP = fLρv² / (2D × 144)
-                </div>
-                
-                <div class="equation-box">
-                    <strong>Reynolds Number:</strong><br>
-                    Re = 928ρvD / μ
+                <div class="info-section">
+                    <h3>Color Mapping</h3>
+                    <p>
+                        Colors represent pressure magnitude using a heat map:
+                        <br>• Blue (0-25%): Low pressure
+                        <br>• Cyan (25-40%): Below average
+                        <br>• Green (40-55%): Average
+                        <br>• Yellow (55-70%): Above average
+                        <br>• Orange (70-85%): High
+                        <br>• Red (85-100%): Maximum pressure
+                    </p>
                 </div>
             </div>
         </div>
     </div>
     
     <script>
-        // Service Worker Registration
+        // Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker registered'))
-                .catch(err => console.log('Service Worker registration failed'));
+            navigator.serviceWorker.register('sw.js');
         }
         
         // Install Prompt
@@ -726,11 +717,11 @@
             event.target.classList.add('active');
             
             if (tabName === 'wellbore') {
-                setTimeout(drawWellbore, 100);
+                setTimeout(draw3DWellbore, 100);
             }
         }
         
-        // Get all inputs
+        // Inputs
         const inputs = {
             rate: document.getElementById('rate'),
             tvd: document.getElementById('tvd'),
@@ -742,12 +733,12 @@
             isip: document.getElementById('isip')
         };
         
-        // Add event listeners
+        // Event listeners
         Object.values(inputs).forEach(input => {
             input.addEventListener('input', () => {
                 updateDisplays();
                 calculate();
-                drawWellbore();
+                draw3DWellbore();
             });
         });
         
@@ -761,6 +752,8 @@
             document.getElementById('frDisplay').textContent = inputs.frictionReducer.value + '%';
             document.getElementById('isipDisplay').textContent = parseInt(inputs.isip.value).toLocaleString() + ' psi';
         }
+        
+        let calculatedPressures = [];
         
         function calculate() {
             const rate = parseFloat(inputs.rate.value);
@@ -807,6 +800,28 @@
             const totalPressure = hydrostatic + frictionPressure + isip;
             const hhp = (totalPressure * rate) / 40.8;
             
+            // Calculate pressure for each segment
+            const numSegments = 100;
+            calculatedPressures = [];
+            
+            for (let i = 0; i <= numSegments; i++) {
+                const segmentDistance = (md / numSegments) * i;
+                let segmentPressure = isip; // Start with formation pressure
+                
+                // Add hydrostatic for vertical portion
+                if (segmentDistance <= tvd) {
+                    segmentPressure += 0.052 * density * segmentDistance;
+                } else {
+                    segmentPressure += hydrostatic;
+                }
+                
+                // Add friction based on distance
+                const frictionAtSegment = (frictionPressure / md) * segmentDistance;
+                segmentPressure += frictionAtSegment;
+                
+                calculatedPressures.push(segmentPressure);
+            }
+            
             // Update displays
             document.getElementById('hydroValue').textContent = Math.round(hydrostatic).toLocaleString();
             document.getElementById('frictionValue').textContent = Math.round(frictionPressure).toLocaleString();
@@ -823,191 +838,252 @@
             regimeBadge.textContent = regime;
             regimeBadge.className = 'regime-badge ' + regimeClass;
             
-            // Update legend and gradient labels
-            document.getElementById('legendLow').textContent = Math.round(hydrostatic) + ' psi';
-            document.getElementById('legendMid').textContent = Math.round(hydrostatic + frictionPressure/2) + ' psi';
-            document.getElementById('legendHigh').textContent = Math.round(totalPressure) + ' psi';
-            document.getElementById('gradientMin').textContent = Math.round(hydrostatic) + ' psi';
-            document.getElementById('gradientMax').textContent = Math.round(totalPressure) + ' psi';
+            // Update legend
+            const minPressure = Math.min(...calculatedPressures);
+            const maxPressure = Math.max(...calculatedPressures);
+            document.getElementById('legendMin').textContent = Math.round(minPressure).toLocaleString();
+            document.getElementById('legendMax').textContent = Math.round(maxPressure).toLocaleString();
+            document.getElementById('maxPressure').textContent = Math.round(maxPressure).toLocaleString();
         }
         
-        function drawWellbore() {
-            const canvas = document.getElementById('wellboreCanvas');
+        // 3D Wellbore Visualization
+        let rotationX = 20;
+        let rotationY = 45;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        
+        function draw3DWellbore() {
+            const canvas = document.getElementById('wellboreCanvas3D');
             if (!canvas || !canvas.getContext) return;
             
             const ctx = canvas.getContext('2d');
             const rect = canvas.parentElement.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            ctx.clearRect(0, 0, width, height);
             
             const tvd = parseFloat(inputs.tvd.value);
             const lateral = parseFloat(inputs.lateral.value);
-            const density = parseFloat(inputs.density.value);
-            const isip = parseFloat(inputs.isip.value);
             
-            const hydrostatic = 0.052 * density * tvd;
-            
-            // Calculate total MD and friction for scaling
-            const md = tvd + lateral;
-            const rate = parseFloat(inputs.rate.value);
-            const diameter = parseFloat(inputs.diameter.value);
-            const sand = parseFloat(inputs.sand.value);
-            const frEfficiency = parseFloat(inputs.frictionReducer.value) / 100;
-            
-            const area = Math.PI * Math.pow(diameter / 2, 2);
-            const velocity = rate / (2.448 * area);
-            const viscosity = 1.0;
-            const reynolds = (928 * density * velocity * diameter) / viscosity;
-            
-            let frictionFactor;
-            if (reynolds < 2300) {
-                frictionFactor = 64 / reynolds;
-            } else {
-                const roughness = 0.0018;
-                frictionFactor = 0.25 / Math.pow(Math.log10(roughness/3.7 + 5.74/Math.pow(reynolds, 0.9)), 2);
+            if (calculatedPressures.length === 0) {
+                calculate();
             }
             
-            const densityLbFt3 = density * 7.48;
-            const diameterFt = diameter / 12;
-            let frictionPressure = (frictionFactor * md * densityLbFt3 * Math.pow(velocity, 2)) / (2 * diameterFt * 144);
+            const minPressure = Math.min(...calculatedPressures);
+            const maxPressure = Math.max(...calculatedPressures);
             
-            const sandFactor = 1 + (sand * 0.15);
-            frictionPressure *= sandFactor;
-            frictionPressure *= (1 - frEfficiency);
+            // Draw 3D wellbore with 100 segments
+            const numSegments = 100;
+            const segmentLengthVertical = tvd / (numSegments * 0.5); // Half segments for vertical
+            const segmentLengthHorizontal = lateral / (numSegments * 0.5); // Half segments for horizontal
             
-            const totalPressure = hydrostatic + frictionPressure + isip;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const scale = Math.min(width, height) / 25;
             
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw ground layers
-            ctx.fillStyle = '#8d6e63';
-            ctx.fillRect(0, 80, canvas.width, 120);
-            ctx.fillStyle = '#6d4c41';
-            ctx.fillRect(0, 200, canvas.width, canvas.height - 200);
-            
-            // Calculate wellbore path
-            const padding = 40;
-            const verticalStart = 50;
-            const verticalEnd = 240;
-            const curveRadius = 40;
-            const lateralY = verticalEnd + curveRadius;
-            const lateralEnd = canvas.width - padding;
-            
-            // Draw wellbore with pressure gradient
-            const segments = 50;
-            const wellboreWidth = 8;
-            
-            // Vertical section
-            for (let i = 0; i < segments; i++) {
-                const y1 = verticalStart + (verticalEnd - verticalStart) * (i / segments);
-                const y2 = verticalStart + (verticalEnd - verticalStart) * ((i + 1) / segments);
+            // Draw vertical section (50 segments)
+            for (let i = 0; i < numSegments / 2; i++) {
+                const depth = i * segmentLengthVertical;
+                const pressure = calculatedPressures[i * 2];
+                const color = getPressureColor(pressure, minPressure, maxPressure);
                 
-                const depthFraction = i / segments;
-                const pressureAtPoint = hydrostatic * depthFraction;
-                const color = getPressureColor(pressureAtPoint, 0, totalPressure);
+                // 3D projection
+                const x1 = 0;
+                const y1 = -depth / 100;
+                const z1 = 0;
                 
-                ctx.strokeStyle = color;
-                ctx.lineWidth = wellboreWidth;
-                ctx.beginPath();
-                ctx.moveTo(padding, y1);
-                ctx.lineTo(padding, y2);
-                ctx.stroke();
+                const x2 = 0;
+                const y2 = -(depth + segmentLengthVertical) / 100;
+                const z2 = 0;
+                
+                const proj1 = project3D(x1, y1, z1, rotationX, rotationY, centerX, centerY, scale);
+                const proj2 = project3D(x2, y2, z2, rotationX, rotationY, centerX, centerY, scale);
+                
+                // Draw segment as cylinder
+                drawCylinderSegment(ctx, proj1.x, proj1.y, proj2.x, proj2.y, 8, color, proj1.depth);
             }
             
-            // Curve section
-            for (let i = 0; i <= 20; i++) {
-                const angle = (Math.PI / 2) * (i / 20);
-                const x1 = padding + curveRadius * Math.sin((Math.PI / 2) * (i / 20));
-                const y1 = verticalEnd + curveRadius * (1 - Math.cos((Math.PI / 2) * (i / 20)));
-                const x2 = padding + curveRadius * Math.sin((Math.PI / 2) * ((i + 1) / 20));
-                const y2 = verticalEnd + curveRadius * (1 - Math.cos((Math.PI / 2) * ((i + 1) / 20)));
+            // Draw horizontal section (50 segments)
+            for (let i = 0; i < numSegments / 2; i++) {
+                const distance = i * segmentLengthHorizontal;
+                const pressure = calculatedPressures[50 + i * 2];
+                const color = getPressureColor(pressure, minPressure, maxPressure);
                 
-                const curveFraction = i / 20;
-                const pressureAtPoint = hydrostatic + (frictionPressure * 0.2 * curveFraction);
-                const color = getPressureColor(pressureAtPoint, 0, totalPressure);
+                // 3D projection
+                const x1 = distance / 100;
+                const y1 = -tvd / 100;
+                const z1 = 0;
                 
-                ctx.strokeStyle = color;
-                ctx.lineWidth = wellboreWidth;
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
+                const x2 = (distance + segmentLengthHorizontal) / 100;
+                const y2 = -tvd / 100;
+                const z2 = 0;
+                
+                const proj1 = project3D(x1, y1, z1, rotationX, rotationY, centerX, centerY, scale);
+                const proj2 = project3D(x2, y2, z2, rotationX, rotationY, centerX, centerY, scale);
+                
+                // Draw segment as cylinder
+                drawCylinderSegment(ctx, proj1.x, proj1.y, proj2.x, proj2.y, 8, color, proj1.depth);
             }
             
-            // Horizontal section
-            const lateralStart = padding + curveRadius;
-            for (let i = 0; i < segments; i++) {
-                const x1 = lateralStart + (lateralEnd - lateralStart) * (i / segments);
-                const x2 = lateralStart + (lateralEnd - lateralStart) * ((i + 1) / segments);
-                
-                const lateralFraction = i / segments;
-                const pressureAtPoint = hydrostatic + (frictionPressure * lateralFraction);
-                const color = getPressureColor(pressureAtPoint, 0, totalPressure);
-                
-                ctx.strokeStyle = color;
-                ctx.lineWidth = wellboreWidth;
-                ctx.beginPath();
-                ctx.moveTo(x1, lateralY);
-                ctx.lineTo(x2, lateralY);
-                ctx.stroke();
-            }
-            
-            // Draw perforations at toe
-            ctx.fillStyle = '#ff6b6b';
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.arc(lateralEnd, lateralY + (i - 2) * 4, 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            // Labels
+            // Draw surface marker
+            const surfaceProj = project3D(0, 0, 0, rotationX, rotationY, centerX, centerY, scale);
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('Surface', padding - 30, 40);
-            ctx.fillText('Heel', lateralStart - 20, lateralY + 25);
-            ctx.fillText('Toe', lateralEnd - 15, lateralY + 25);
+            ctx.beginPath();
+            ctx.arc(surfaceProj.x, surfaceProj.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
             
-            // Depth markers
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '10px sans-serif';
-            ctx.fillText(tvd.toLocaleString() + ' ft TVD', padding + 10, verticalEnd - 10);
-            ctx.fillText(lateral.toLocaleString() + ' ft lateral', lateralStart + 50, lateralY - 15);
+            // Draw toe marker
+            const toeProj = project3D(lateral / 100, -tvd / 100, 0, rotationX, rotationY, centerX, centerY, scale);
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(toeProj.x, toeProj.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function project3D(x, y, z, rotX, rotY, centerX, centerY, scale) {
+            // Rotate around X axis
+            const radX = rotX * Math.PI / 180;
+            const y1 = y * Math.cos(radX) - z * Math.sin(radX);
+            const z1 = y * Math.sin(radX) + z * Math.cos(radX);
+            
+            // Rotate around Y axis
+            const radY = rotY * Math.PI / 180;
+            const x1 = x * Math.cos(radY) + z1 * Math.sin(radY);
+            const z2 = -x * Math.sin(radY) + z1 * Math.cos(radY);
+            
+            // Project to 2D
+            const perspective = 1 / (1 + z2 * 0.1);
+            
+            return {
+                x: centerX + x1 * scale * perspective,
+                y: centerY + y1 * scale * perspective,
+                depth: z2
+            };
+        }
+        
+        function drawCylinderSegment(ctx, x1, y1, x2, y2, radius, color, depth) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = radius * (1 + depth * 0.1);
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
         }
         
         function getPressureColor(pressure, minPressure, maxPressure) {
             const fraction = (pressure - minPressure) / (maxPressure - minPressure);
             
-            // Blue to Red gradient
             let r, g, b;
-            if (fraction < 0.25) {
-                // Blue to cyan
-                const t = fraction / 0.25;
-                r = Math.round(33 * (1 - t) + 0 * t);
-                g = Math.round(150 * (1 - t) + 188 * t);
-                b = Math.round(243 * (1 - t) + 212 * t);
+            if (fraction < 0.17) {
+                // Blue to Cyan
+                const t = fraction / 0.17;
+                r = Math.round(0 * (1 - t) + 0 * t);
+                g = Math.round(0 * (1 - t) + 255 * t);
+                b = Math.round(255);
+            } else if (fraction < 0.33) {
+                // Cyan to Green
+                const t = (fraction - 0.17) / 0.17;
+                r = 0;
+                g = 255;
+                b = Math.round(255 * (1 - t) + 0 * t);
             } else if (fraction < 0.5) {
-                // Cyan to green
-                const t = (fraction - 0.25) / 0.25;
-                r = Math.round(0 * (1 - t) + 76 * t);
-                g = Math.round(188 * (1 - t) + 175 * t);
-                b = Math.round(212 * (1 - t) + 80 * t);
-            } else if (fraction < 0.75) {
-                // Green to yellow
-                const t = (fraction - 0.5) / 0.25;
-                r = Math.round(76 * (1 - t) + 255 * t);
-                g = Math.round(175 * (1 - t) + 235 * t);
-                b = Math.round(80 * (1 - t) + 59 * t);
+                // Green to Yellow
+                const t = (fraction - 0.33) / 0.17;
+                r = Math.round(0 * (1 - t) + 255 * t);
+                g = 255;
+                b = 0;
+            } else if (fraction < 0.67) {
+                // Yellow to Orange
+                const t = (fraction - 0.5) / 0.17;
+                r = 255;
+                g = Math.round(255 * (1 - t) + 165 * t);
+                b = 0;
             } else {
-                // Yellow to red
-                const t = (fraction - 0.75) / 0.25;
-                r = Math.round(255);
-                g = Math.round(235 * (1 - t) + 152 * t);
-                b = Math.round(59 * (1 - t) + 0 * t);
+                // Orange to Red
+                const t = (fraction - 0.67) / 0.33;
+                r = 255;
+                g = Math.round(165 * (1 - t) + 0 * t);
+                b = 0;
             }
             
             return `rgb(${r}, ${g}, ${b})`;
         }
+        
+        // Mouse/Touch controls for 3D rotation
+        const canvas = document.getElementById('wellboreCanvas3D');
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+                
+                rotationY += deltaX * 0.5;
+                rotationX += deltaY * 0.5;
+                
+                // Limit rotation
+                rotationX = Math.max(-90, Math.min(90, rotationX));
+                
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                
+                draw3DWellbore();
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+        
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+            }
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length === 1) {
+                e.preventDefault();
+                const deltaX = e.touches[0].clientX - lastMouseX;
+                const deltaY = e.touches[0].clientY - lastMouseY;
+                
+                rotationY += deltaX * 0.5;
+                rotationX += deltaY * 0.5;
+                
+                rotationX = Math.max(-90, Math.min(90, rotationX));
+                
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+                
+                draw3DWellbore();
+            }
+        });
+        
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+        });
         
         function loadPreset(type) {
             switch(type) {
@@ -1046,13 +1122,15 @@
             }
             updateDisplays();
             calculate();
-            drawWellbore();
+            draw3DWellbore();
         }
         
-        // Initial calculation and draw
+        // Initial setup
         updateDisplays();
         calculate();
-        setTimeout(drawWellbore, 500);
+        setTimeout(() => {
+            draw3DWellbore();
+        }, 500);
     </script>
 </body>
 </html>
