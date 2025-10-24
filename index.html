@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Friction Calc">
     <link rel="manifest" href="manifest.json">
-    <title>Friction Calculator - Mobile</title>
+    <title>Friction Calculator - Delaware Basin</title>
     <style>
         * {
             margin: 0;
@@ -36,7 +36,7 @@
         }
         
         .app-header h1 {
-            font-size: 1.5em;
+            font-size: 1.4em;
             color: #2c3e50;
             display: flex;
             align-items: center;
@@ -44,7 +44,7 @@
         }
         
         .app-header .subtitle {
-            font-size: 0.75em;
+            font-size: 0.7em;
             color: #7f8c8d;
             margin-top: 2px;
         }
@@ -80,12 +80,12 @@
         
         .tab-button {
             flex: 1;
-            padding: 15px;
+            padding: 12px 8px;
             border: none;
             background: white;
             color: #7f8c8d;
             font-weight: 600;
-            font-size: 0.9em;
+            font-size: 0.8em;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -171,6 +171,64 @@
             cursor: pointer;
             border: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Wellbore Visualization */
+        .wellbore-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #e3f2fd 0%, #90caf9 100%);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .wellbore-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .wellbore-legend {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.75em;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        .pressure-gradient-bar {
+            height: 30px;
+            background: linear-gradient(to right, #2196f3, #4caf50, #ffeb3b, #ff9800, #f44336);
+            border-radius: 5px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .gradient-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75em;
+            color: #666;
+            margin-top: 5px;
         }
         
         .pressure-display {
@@ -282,48 +340,6 @@
             color: #721c24;
         }
         
-        .chart-container {
-            position: relative;
-            height: 250px;
-            margin: 20px 0;
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-around;
-        }
-        
-        .bar {
-            width: 60px;
-            border-radius: 8px 8px 0 0;
-            transition: all 0.5s ease;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            color: white;
-            font-weight: bold;
-            padding: 8px 5px;
-            font-size: 0.85em;
-        }
-        
-        .bar-label {
-            position: absolute;
-            bottom: -35px;
-            font-size: 0.7em;
-            color: #2c3e50;
-            text-align: center;
-            width: 100%;
-            font-weight: 600;
-        }
-        
-        .bar.hydro { background: linear-gradient(180deg, #3498db, #2980b9); }
-        .bar.friction { background: linear-gradient(180deg, #e67e22, #d35400); }
-        .bar.formation { background: linear-gradient(180deg, #e74c3c, #c0392b); }
-        .bar.total { background: linear-gradient(180deg, #2ecc71, #27ae60); }
-        
         .equation-box {
             background: #fff3cd;
             border-left: 4px solid #ffc107;
@@ -390,61 +406,62 @@
 </head>
 <body>
     <div class="install-prompt" id="installPrompt">
-        📱 Tap here to install as an app on your home screen
+        Tap here to install as an app on your home screen
     </div>
     
     <div class="app-header">
-        <h1>🔧 Friction Calculator</h1>
-        <div class="subtitle">Hydraulic Fracturing Analysis</div>
+        <h1>Friction Calculator</h1>
+        <div class="subtitle">Delaware Basin - Hydraulic Fracturing</div>
     </div>
     
     <div class="container">
         <!-- Tab Navigation -->
         <div class="tab-navigation">
-            <button class="tab-button active" onclick="switchTab('inputs')">⚙️ Inputs</button>
-            <button class="tab-button" onclick="switchTab('results')">📊 Results</button>
-            <button class="tab-button" onclick="switchTab('info')">ℹ️ Info</button>
+            <button class="tab-button active" onclick="switchTab('inputs')">Inputs</button>
+            <button class="tab-button" onclick="switchTab('wellbore')">Wellbore</button>
+            <button class="tab-button" onclick="switchTab('results')">Results</button>
+            <button class="tab-button" onclick="switchTab('info')">Info</button>
         </div>
         
         <!-- Inputs Tab -->
         <div id="inputsTab" class="tab-content active">
             <div class="card">
-                <h2>📍 Well Configuration</h2>
+                <h2>Well Configuration</h2>
                 
                 <div class="control-group">
                     <label>
                         True Vertical Depth
-                        <span class="value-badge" id="tvdDisplay">11,921 ft</span>
+                        <span class="value-badge" id="tvdDisplay">9,500 ft</span>
                     </label>
-                    <input type="range" id="tvd" min="5000" max="20000" value="11921" step="100">
+                    <input type="range" id="tvd" min="5000" max="15000" value="9500" step="100">
                 </div>
                 
                 <div class="control-group">
                     <label>
-                        Measured Depth
-                        <span class="value-badge" id="mdDisplay">22,000 ft</span>
+                        Lateral Length
+                        <span class="value-badge" id="lateralDisplay">10,000 ft</span>
                     </label>
-                    <input type="range" id="md" min="5000" max="30000" value="22000" step="100">
+                    <input type="range" id="lateral" min="5000" max="15000" value="10000" step="100">
                 </div>
                 
                 <div class="control-group">
                     <label>
                         Tubing Diameter
-                        <span class="value-badge" id="diameterDisplay">3.50 in</span>
+                        <span class="value-badge" id="diameterDisplay">4.50 in</span>
                     </label>
-                    <input type="range" id="diameter" min="2.0" max="5.5" value="3.5" step="0.25">
+                    <input type="range" id="diameter" min="2.0" max="5.5" value="4.5" step="0.25">
                 </div>
             </div>
             
             <div class="card">
-                <h2>💧 Fluid Properties</h2>
+                <h2>Fluid Properties</h2>
                 
                 <div class="control-group">
                     <label>
                         Pump Rate
-                        <span class="value-badge" id="rateDisplay">90 BPM</span>
+                        <span class="value-badge" id="rateDisplay">95 BPM</span>
                     </label>
-                    <input type="range" id="rate" min="20" max="120" value="90" step="5">
+                    <input type="range" id="rate" min="20" max="120" value="95" step="5">
                 </div>
                 
                 <div class="control-group">
@@ -458,39 +475,84 @@
                 <div class="control-group">
                     <label>
                         Sand Concentration
-                        <span class="value-badge" id="sandDisplay">0.00 ppg</span>
+                        <span class="value-badge" id="sandDisplay">1.50 ppg</span>
                     </label>
-                    <input type="range" id="sand" min="0" max="3" value="0" step="0.25">
+                    <input type="range" id="sand" min="0" max="3" value="1.5" step="0.25">
                 </div>
                 
                 <div class="control-group">
                     <label>
                         Friction Reducer
-                        <span class="value-badge" id="frDisplay">60%</span>
+                        <span class="value-badge" id="frDisplay">65%</span>
                     </label>
-                    <input type="range" id="frictionReducer" min="0" max="70" value="60" step="5">
+                    <input type="range" id="frictionReducer" min="0" max="70" value="65" step="5">
                 </div>
             </div>
             
             <div class="card">
-                <h2>🎯 Formation</h2>
+                <h2>Formation</h2>
                 
                 <div class="control-group">
                     <label>
                         ISIP (Formation Pressure)
-                        <span class="value-badge" id="isipDisplay">5,800 psi</span>
+                        <span class="value-badge" id="isipDisplay">7,200 psi</span>
                     </label>
-                    <input type="range" id="isip" min="3000" max="8000" value="5800" step="100">
+                    <input type="range" id="isip" min="3000" max="10000" value="7200" step="100">
                 </div>
             </div>
             
             <div class="card">
-                <h2>⚡ Quick Presets</h2>
+                <h2>Delaware Basin Presets</h2>
                 <div class="quick-presets">
-                    <button class="preset-button" onclick="loadPreset('low')">Low Rate</button>
-                    <button class="preset-button" onclick="loadPreset('typical')">Typical Job</button>
-                    <button class="preset-button" onclick="loadPreset('high')">High Rate</button>
-                    <button class="preset-button" onclick="loadPreset('sand')">High Sand</button>
+                    <button class="preset-button" onclick="loadPreset('wolfcamp')">Wolfcamp A</button>
+                    <button class="preset-button" onclick="loadPreset('bone')">Bone Spring</button>
+                    <button class="preset-button" onclick="loadPreset('avalon')">Avalon Shale</button>
+                    <button class="preset-button" onclick="loadPreset('highrate')">High Rate</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Wellbore Tab -->
+        <div id="wellboreTab" class="tab-content">
+            <div class="card">
+                <h2>Pressure Distribution - Wellbore</h2>
+                
+                <div class="wellbore-container">
+                    <canvas id="wellboreCanvas" class="wellbore-canvas"></canvas>
+                    <div class="wellbore-legend">
+                        <div style="font-weight: bold; margin-bottom: 5px;">Pressure (psi)</div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #2196f3;"></div>
+                            <span id="legendLow">Low</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ffeb3b;"></div>
+                            <span id="legendMid">Medium</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f44336;"></div>
+                            <span id="legendHigh">High</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <strong>Pressure Gradient Scale</strong>
+                    <div class="pressure-gradient-bar"></div>
+                    <div class="gradient-labels">
+                        <span id="gradientMin">0 psi</span>
+                        <span id="gradientMax">12,000 psi</span>
+                    </div>
+                </div>
+                
+                <div class="info-section" style="margin-top: 15px;">
+                    <h3>Understanding the Visualization</h3>
+                    <p>
+                        <strong>Blue (Low Pressure):</strong> Near the toe of the wellbore<br>
+                        <strong>Yellow/Orange (Medium):</strong> Mid-lateral section<br>
+                        <strong>Red (High Pressure):</strong> Near surface and heel<br><br>
+                        The color gradient shows cumulative pressure buildup from friction as fluid travels through the wellbore.
+                    </p>
                 </div>
             </div>
         </div>
@@ -498,87 +560,68 @@
         <!-- Results Tab -->
         <div id="resultsTab" class="tab-content">
             <div class="card">
-                <h2>📊 Pressure Breakdown</h2>
+                <h2>Pressure Breakdown</h2>
                 
                 <div class="pressure-display">
                     <div class="pressure-card hydro">
                         <h3>Hydrostatic</h3>
-                        <div class="value" id="hydroValue">5,170</div>
+                        <div class="value" id="hydroValue">4,117</div>
                         <div class="unit">psi</div>
                     </div>
                     
                     <div class="pressure-card friction">
                         <h3>Friction</h3>
-                        <div class="value" id="frictionValue">830</div>
+                        <div class="value" id="frictionValue">1,240</div>
                         <div class="unit">psi</div>
                     </div>
                     
                     <div class="pressure-card formation">
                         <h3>Formation</h3>
-                        <div class="value" id="formationValue">5,800</div>
+                        <div class="value" id="formationValue">7,200</div>
                         <div class="unit">psi</div>
                     </div>
                     
                     <div class="pressure-card total">
                         <h3>Total Surface Pressure</h3>
-                        <div class="value" id="totalValue">11,800</div>
+                        <div class="value" id="totalValue">12,557</div>
                         <div class="unit">psi</div>
-                    </div>
-                </div>
-                
-                <div class="chart-container">
-                    <div class="bar hydro" id="barHydro">
-                        <span id="barHydroText">5,170</span>
-                        <div class="bar-label">Hydro</div>
-                    </div>
-                    <div class="bar friction" id="barFriction">
-                        <span id="barFrictionText">830</span>
-                        <div class="bar-label">Friction</div>
-                    </div>
-                    <div class="bar formation" id="barFormation">
-                        <span id="barFormationText">5,800</span>
-                        <div class="bar-label">Formation</div>
-                    </div>
-                    <div class="bar total" id="barTotal">
-                        <span id="barTotalText">11,800</span>
-                        <div class="bar-label">Total</div>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <h2>🔬 Flow Analysis</h2>
+                <h2>Flow Analysis</h2>
                 
                 <div class="flow-regime">
                     <div style="font-weight: 600; color: #2c3e50;">Flow Regime</div>
                     <div class="regime-badge turbulent" id="regimeBadge">TURBULENT</div>
                     <div style="margin-top: 10px; color: #7f8c8d; font-size: 0.9em;">
-                        Reynolds: <strong id="reynoldsValue">400,000</strong>
+                        Reynolds: <strong id="reynoldsValue">523,847</strong>
                     </div>
                 </div>
                 
                 <div class="results-grid">
                     <div class="result-item">
                         <h4>Velocity</h4>
-                        <div class="value" id="velocityValue">9.4</div>
+                        <div class="value" id="velocityValue">6.0</div>
                         <div class="unit">ft/s</div>
                     </div>
                     
                     <div class="result-item">
                         <h4>Friction Factor</h4>
-                        <div class="value" id="frictionFactorValue">0.0062</div>
+                        <div class="value" id="frictionFactorValue">0.0057</div>
                         <div class="unit">f</div>
                     </div>
                     
                     <div class="result-item">
-                        <h4>Lateral Length</h4>
-                        <div class="value" id="lateralValue">10,079</div>
+                        <h4>Measured Depth</h4>
+                        <div class="value" id="mdValue">19,500</div>
                         <div class="unit">ft</div>
                     </div>
                     
                     <div class="result-item">
                         <h4>Hydraulic HP</h4>
-                        <div class="value" id="hhpValue">3,456</div>
+                        <div class="value" id="hhpValue">2,923</div>
                         <div class="unit">HHP</div>
                     </div>
                 </div>
@@ -588,7 +631,44 @@
         <!-- Info Tab -->
         <div id="infoTab" class="tab-content">
             <div class="card">
-                <h2>📚 Key Equations</h2>
+                <h2>Delaware Basin Typical Values</h2>
+                
+                <div class="info-section">
+                    <h3>Wolfcamp Formation</h3>
+                    <p>
+                        <strong>TVD:</strong> 8,500 - 11,000 ft<br>
+                        <strong>Lateral:</strong> 7,500 - 12,000 ft<br>
+                        <strong>ISIP:</strong> 6,500 - 8,000 psi<br>
+                        <strong>Rate:</strong> 80 - 110 BPM<br>
+                        <strong>Proppant:</strong> 1,500 - 2,500 lbs/ft
+                    </p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Bone Spring Formation</h3>
+                    <p>
+                        <strong>TVD:</strong> 7,000 - 9,500 ft<br>
+                        <strong>Lateral:</strong> 8,000 - 11,000 ft<br>
+                        <strong>ISIP:</strong> 5,500 - 7,500 psi<br>
+                        <strong>Rate:</strong> 85 - 105 BPM<br>
+                        <strong>Proppant:</strong> 1,800 - 2,800 lbs/ft
+                    </p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Avalon Shale</h3>
+                    <p>
+                        <strong>TVD:</strong> 9,500 - 12,000 ft<br>
+                        <strong>Lateral:</strong> 7,000 - 10,000 ft<br>
+                        <strong>ISIP:</strong> 7,000 - 8,500 psi<br>
+                        <strong>Rate:</strong> 75 - 100 BPM<br>
+                        <strong>Proppant:</strong> 1,200 - 2,000 lbs/ft
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Key Equations</h2>
                 
                 <div class="equation-box">
                     <strong>Hydrostatic Pressure:</strong><br>
@@ -596,41 +676,13 @@
                 </div>
                 
                 <div class="equation-box">
-                    <strong>Fluid Velocity:</strong><br>
-                    v = Q / (2.448 × A)
+                    <strong>Darcy-Weisbach:</strong><br>
+                    ΔP = fLρv² / (2D × 144)
                 </div>
                 
                 <div class="equation-box">
                     <strong>Reynolds Number:</strong><br>
                     Re = 928ρvD / μ
-                </div>
-                
-                <div class="equation-box">
-                    <strong>Darcy-Weisbach:</strong><br>
-                    ΔP = fLρv² / (2D × 144)
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>ℹ️ About</h2>
-                
-                <div class="info-section">
-                    <h3>Purpose</h3>
-                    <p>This app calculates friction pressure during hydraulic fracturing operations using industry-standard equations.</p>
-                </div>
-                
-                <div class="info-section">
-                    <h3>Flow Regimes</h3>
-                    <p><strong>Laminar (Re < 2,300):</strong> Smooth, layered flow<br>
-                    <strong>Turbulent (Re > 4,000):</strong> Chaotic flow with higher friction</p>
-                </div>
-                
-                <div class="info-section">
-                    <h3>Usage Tips</h3>
-                    <p>• Start with typical values and adjust<br>
-                    • Use quick presets for common scenarios<br>
-                    • Add to home screen for offline access<br>
-                    • Works without internet connection</p>
                 </div>
             </div>
         </div>
@@ -663,7 +715,6 @@
         
         // Tab Switching
         function switchTab(tabName) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -671,16 +722,19 @@
                 btn.classList.remove('active');
             });
             
-            // Show selected tab
             document.getElementById(tabName + 'Tab').classList.add('active');
             event.target.classList.add('active');
+            
+            if (tabName === 'wellbore') {
+                setTimeout(drawWellbore, 100);
+            }
         }
         
         // Get all inputs
         const inputs = {
             rate: document.getElementById('rate'),
             tvd: document.getElementById('tvd'),
-            md: document.getElementById('md'),
+            lateral: document.getElementById('lateral'),
             sand: document.getElementById('sand'),
             density: document.getElementById('density'),
             diameter: document.getElementById('diameter'),
@@ -693,13 +747,14 @@
             input.addEventListener('input', () => {
                 updateDisplays();
                 calculate();
+                drawWellbore();
             });
         });
         
         function updateDisplays() {
             document.getElementById('rateDisplay').textContent = inputs.rate.value + ' BPM';
             document.getElementById('tvdDisplay').textContent = parseInt(inputs.tvd.value).toLocaleString() + ' ft';
-            document.getElementById('mdDisplay').textContent = parseInt(inputs.md.value).toLocaleString() + ' ft';
+            document.getElementById('lateralDisplay').textContent = parseInt(inputs.lateral.value).toLocaleString() + ' ft';
             document.getElementById('sandDisplay').textContent = parseFloat(inputs.sand.value).toFixed(2) + ' ppg';
             document.getElementById('densityDisplay').textContent = parseFloat(inputs.density.value).toFixed(2) + ' ppg';
             document.getElementById('diameterDisplay').textContent = parseFloat(inputs.diameter.value).toFixed(2) + ' in';
@@ -710,12 +765,14 @@
         function calculate() {
             const rate = parseFloat(inputs.rate.value);
             const tvd = parseFloat(inputs.tvd.value);
-            const md = parseFloat(inputs.md.value);
+            const lateral = parseFloat(inputs.lateral.value);
             const sand = parseFloat(inputs.sand.value);
             const density = parseFloat(inputs.density.value);
             const diameter = parseFloat(inputs.diameter.value);
             const frEfficiency = parseFloat(inputs.frictionReducer.value) / 100;
             const isip = parseFloat(inputs.isip.value);
+            
+            const md = tvd + lateral;
             
             // Calculations
             const hydrostatic = 0.052 * density * tvd;
@@ -749,7 +806,6 @@
             
             const totalPressure = hydrostatic + frictionPressure + isip;
             const hhp = (totalPressure * rate) / 40.8;
-            const lateral = md - tvd;
             
             // Update displays
             document.getElementById('hydroValue').textContent = Math.round(hydrostatic).toLocaleString();
@@ -759,7 +815,7 @@
             
             document.getElementById('velocityValue').textContent = velocity.toFixed(1);
             document.getElementById('frictionFactorValue').textContent = frictionFactor.toFixed(4);
-            document.getElementById('lateralValue').textContent = Math.round(lateral).toLocaleString();
+            document.getElementById('mdValue').textContent = Math.round(md).toLocaleString();
             document.getElementById('hhpValue').textContent = Math.round(hhp).toLocaleString();
             document.getElementById('reynoldsValue').textContent = Math.round(reynolds).toLocaleString();
             
@@ -767,51 +823,236 @@
             regimeBadge.textContent = regime;
             regimeBadge.className = 'regime-badge ' + regimeClass;
             
-            // Update bars
-            const maxPressure = Math.max(hydrostatic, frictionPressure, isip, totalPressure);
-            const scale = 180 / maxPressure;
+            // Update legend and gradient labels
+            document.getElementById('legendLow').textContent = Math.round(hydrostatic) + ' psi';
+            document.getElementById('legendMid').textContent = Math.round(hydrostatic + frictionPressure/2) + ' psi';
+            document.getElementById('legendHigh').textContent = Math.round(totalPressure) + ' psi';
+            document.getElementById('gradientMin').textContent = Math.round(hydrostatic) + ' psi';
+            document.getElementById('gradientMax').textContent = Math.round(totalPressure) + ' psi';
+        }
+        
+        function drawWellbore() {
+            const canvas = document.getElementById('wellboreCanvas');
+            if (!canvas || !canvas.getContext) return;
             
-            document.getElementById('barHydro').style.height = (hydrostatic * scale) + 'px';
-            document.getElementById('barFriction').style.height = (frictionPressure * scale) + 'px';
-            document.getElementById('barFormation').style.height = (isip * scale) + 'px';
-            document.getElementById('barTotal').style.height = (totalPressure * scale) + 'px';
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
             
-            document.getElementById('barHydroText').textContent = Math.round(hydrostatic).toLocaleString();
-            document.getElementById('barFrictionText').textContent = Math.round(frictionPressure).toLocaleString();
-            document.getElementById('barFormationText').textContent = Math.round(isip).toLocaleString();
-            document.getElementById('barTotalText').textContent = Math.round(totalPressure).toLocaleString();
+            const tvd = parseFloat(inputs.tvd.value);
+            const lateral = parseFloat(inputs.lateral.value);
+            const density = parseFloat(inputs.density.value);
+            const isip = parseFloat(inputs.isip.value);
+            
+            const hydrostatic = 0.052 * density * tvd;
+            
+            // Calculate total MD and friction for scaling
+            const md = tvd + lateral;
+            const rate = parseFloat(inputs.rate.value);
+            const diameter = parseFloat(inputs.diameter.value);
+            const sand = parseFloat(inputs.sand.value);
+            const frEfficiency = parseFloat(inputs.frictionReducer.value) / 100;
+            
+            const area = Math.PI * Math.pow(diameter / 2, 2);
+            const velocity = rate / (2.448 * area);
+            const viscosity = 1.0;
+            const reynolds = (928 * density * velocity * diameter) / viscosity;
+            
+            let frictionFactor;
+            if (reynolds < 2300) {
+                frictionFactor = 64 / reynolds;
+            } else {
+                const roughness = 0.0018;
+                frictionFactor = 0.25 / Math.pow(Math.log10(roughness/3.7 + 5.74/Math.pow(reynolds, 0.9)), 2);
+            }
+            
+            const densityLbFt3 = density * 7.48;
+            const diameterFt = diameter / 12;
+            let frictionPressure = (frictionFactor * md * densityLbFt3 * Math.pow(velocity, 2)) / (2 * diameterFt * 144);
+            
+            const sandFactor = 1 + (sand * 0.15);
+            frictionPressure *= sandFactor;
+            frictionPressure *= (1 - frEfficiency);
+            
+            const totalPressure = hydrostatic + frictionPressure + isip;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground layers
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(0, 80, canvas.width, 120);
+            ctx.fillStyle = '#6d4c41';
+            ctx.fillRect(0, 200, canvas.width, canvas.height - 200);
+            
+            // Calculate wellbore path
+            const padding = 40;
+            const verticalStart = 50;
+            const verticalEnd = 240;
+            const curveRadius = 40;
+            const lateralY = verticalEnd + curveRadius;
+            const lateralEnd = canvas.width - padding;
+            
+            // Draw wellbore with pressure gradient
+            const segments = 50;
+            const wellboreWidth = 8;
+            
+            // Vertical section
+            for (let i = 0; i < segments; i++) {
+                const y1 = verticalStart + (verticalEnd - verticalStart) * (i / segments);
+                const y2 = verticalStart + (verticalEnd - verticalStart) * ((i + 1) / segments);
+                
+                const depthFraction = i / segments;
+                const pressureAtPoint = hydrostatic * depthFraction;
+                const color = getPressureColor(pressureAtPoint, 0, totalPressure);
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = wellboreWidth;
+                ctx.beginPath();
+                ctx.moveTo(padding, y1);
+                ctx.lineTo(padding, y2);
+                ctx.stroke();
+            }
+            
+            // Curve section
+            for (let i = 0; i <= 20; i++) {
+                const angle = (Math.PI / 2) * (i / 20);
+                const x1 = padding + curveRadius * Math.sin((Math.PI / 2) * (i / 20));
+                const y1 = verticalEnd + curveRadius * (1 - Math.cos((Math.PI / 2) * (i / 20)));
+                const x2 = padding + curveRadius * Math.sin((Math.PI / 2) * ((i + 1) / 20));
+                const y2 = verticalEnd + curveRadius * (1 - Math.cos((Math.PI / 2) * ((i + 1) / 20)));
+                
+                const curveFraction = i / 20;
+                const pressureAtPoint = hydrostatic + (frictionPressure * 0.2 * curveFraction);
+                const color = getPressureColor(pressureAtPoint, 0, totalPressure);
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = wellboreWidth;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+            
+            // Horizontal section
+            const lateralStart = padding + curveRadius;
+            for (let i = 0; i < segments; i++) {
+                const x1 = lateralStart + (lateralEnd - lateralStart) * (i / segments);
+                const x2 = lateralStart + (lateralEnd - lateralStart) * ((i + 1) / segments);
+                
+                const lateralFraction = i / segments;
+                const pressureAtPoint = hydrostatic + (frictionPressure * lateralFraction);
+                const color = getPressureColor(pressureAtPoint, 0, totalPressure);
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = wellboreWidth;
+                ctx.beginPath();
+                ctx.moveTo(x1, lateralY);
+                ctx.lineTo(x2, lateralY);
+                ctx.stroke();
+            }
+            
+            // Draw perforations at toe
+            ctx.fillStyle = '#ff6b6b';
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc(lateralEnd, lateralY + (i - 2) * 4, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText('Surface', padding - 30, 40);
+            ctx.fillText('Heel', lateralStart - 20, lateralY + 25);
+            ctx.fillText('Toe', lateralEnd - 15, lateralY + 25);
+            
+            // Depth markers
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(tvd.toLocaleString() + ' ft TVD', padding + 10, verticalEnd - 10);
+            ctx.fillText(lateral.toLocaleString() + ' ft lateral', lateralStart + 50, lateralY - 15);
+        }
+        
+        function getPressureColor(pressure, minPressure, maxPressure) {
+            const fraction = (pressure - minPressure) / (maxPressure - minPressure);
+            
+            // Blue to Red gradient
+            let r, g, b;
+            if (fraction < 0.25) {
+                // Blue to cyan
+                const t = fraction / 0.25;
+                r = Math.round(33 * (1 - t) + 0 * t);
+                g = Math.round(150 * (1 - t) + 188 * t);
+                b = Math.round(243 * (1 - t) + 212 * t);
+            } else if (fraction < 0.5) {
+                // Cyan to green
+                const t = (fraction - 0.25) / 0.25;
+                r = Math.round(0 * (1 - t) + 76 * t);
+                g = Math.round(188 * (1 - t) + 175 * t);
+                b = Math.round(212 * (1 - t) + 80 * t);
+            } else if (fraction < 0.75) {
+                // Green to yellow
+                const t = (fraction - 0.5) / 0.25;
+                r = Math.round(76 * (1 - t) + 255 * t);
+                g = Math.round(175 * (1 - t) + 235 * t);
+                b = Math.round(80 * (1 - t) + 59 * t);
+            } else {
+                // Yellow to red
+                const t = (fraction - 0.75) / 0.25;
+                r = Math.round(255);
+                g = Math.round(235 * (1 - t) + 152 * t);
+                b = Math.round(59 * (1 - t) + 0 * t);
+            }
+            
+            return `rgb(${r}, ${g}, ${b})`;
         }
         
         function loadPreset(type) {
             switch(type) {
-                case 'low':
-                    inputs.rate.value = 40;
-                    inputs.sand.value = 0;
-                    inputs.frictionReducer.value = 70;
-                    break;
-                case 'typical':
-                    inputs.rate.value = 90;
-                    inputs.sand.value = 1;
-                    inputs.frictionReducer.value = 60;
-                    break;
-                case 'high':
-                    inputs.rate.value = 110;
-                    inputs.sand.value = 0.5;
+                case 'wolfcamp':
+                    inputs.tvd.value = 9500;
+                    inputs.lateral.value = 10000;
+                    inputs.rate.value = 95;
+                    inputs.sand.value = 1.5;
+                    inputs.isip.value = 7200;
+                    inputs.diameter.value = 4.5;
                     inputs.frictionReducer.value = 65;
                     break;
-                case 'sand':
-                    inputs.rate.value = 70;
-                    inputs.sand.value = 2.5;
-                    inputs.frictionReducer.value = 55;
+                case 'bone':
+                    inputs.tvd.value = 8000;
+                    inputs.lateral.value = 9500;
+                    inputs.rate.value = 90;
+                    inputs.sand.value = 1.75;
+                    inputs.isip.value = 6500;
+                    inputs.diameter.value = 4.5;
+                    inputs.frictionReducer.value = 65;
+                    break;
+                case 'avalon':
+                    inputs.tvd.value = 10500;
+                    inputs.lateral.value = 8500;
+                    inputs.rate.value = 85;
+                    inputs.sand.value = 1.25;
+                    inputs.isip.value = 7800;
+                    inputs.diameter.value = 4.5;
+                    inputs.frictionReducer.value = 60;
+                    break;
+                case 'highrate':
+                    inputs.rate.value = 110;
+                    inputs.sand.value = 2.0;
+                    inputs.frictionReducer.value = 70;
                     break;
             }
             updateDisplays();
             calculate();
+            drawWellbore();
         }
         
-        // Initial calculation
+        // Initial calculation and draw
         updateDisplays();
         calculate();
+        setTimeout(drawWellbore, 500);
     </script>
 </body>
 </html>
