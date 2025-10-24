@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Friction Calc">
+    <link rel="manifest" href="manifest.json">
+    <title>Friction Calculator - Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+        
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .app-header h1 {
+            font-size: 1.5em;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-header .subtitle {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+        
+        .install-prompt {
+            background: #ffc107;
+            color: #000;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+            cursor: pointer;
+        }
+        
+        .install-prompt.show {
+            display: block;
+        }
+        
+        .container {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .tab-navigation {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: white;
+            color: #7f8c8d;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        
+        .value-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .pressure-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .pressure-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .pressure-card.hydro {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .pressure-card.friction {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+        }
+        
+        .pressure-card.formation {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .pressure-card.total {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            grid-column: 1 / -1;
+        }
+        
+        .pressure-card h3 {
+            font-size: 0.75em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .pressure-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .pressure-card .unit {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .result-item h4 {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .result-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .result-item .unit {
+            font-size: 0.8em;
+            color: #95a5a6;
+        }
+        
+        .flow-regime {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .regime-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 8px;
+        }
+        
+        .regime-badge.laminar {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .regime-badge.turbulent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin: 20px 0;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+        }
+        
+        .bar {
+            width: 60px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.5s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            color: white;
+            font-weight: bold;
+            padding: 8px 5px;
+            font-size: 0.85em;
+        }
+        
+        .bar-label {
+            position: absolute;
+            bottom: -35px;
+            font-size: 0.7em;
+            color: #2c3e50;
+            text-align: center;
+            width: 100%;
+            font-weight: 600;
+        }
+        
+        .bar.hydro { background: linear-gradient(180deg, #3498db, #2980b9); }
+        .bar.friction { background: linear-gradient(180deg, #e67e22, #d35400); }
+        .bar.formation { background: linear-gradient(180deg, #e74c3c, #c0392b); }
+        .bar.total { background: linear-gradient(180deg, #2ecc71, #27ae60); }
+        
+        .equation-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin: 15px 0;
+        }
+        
+        .quick-presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .preset-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .preset-button:active {
+            transform: scale(0.95);
+        }
+        
+        .info-section {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .info-section h3 {
+            color: #1976d2;
+            font-size: 1em;
+            margin-bottom: 8px;
+        }
+        
+        .info-section p {
+            color: #424242;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 400px) {
+            .pressure-display {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="install-prompt" id="installPrompt">
+        📱 Tap here to install as an app on your home screen
+    </div>
+    
+    <div class="app-header">
+        <h1>🔧 Friction Calculator</h1>
+        <div class="subtitle">Hydraulic Fracturing Analysis</div>
+    </div>
+    
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="switchTab('inputs')">⚙️ Inputs</button>
+            <button class="tab-button" onclick="switchTab('results')">📊 Results</button>
+            <button class="tab-button" onclick="switchTab('info')">ℹ️ Info</button>
+        </div>
+        
+        <!-- Inputs Tab -->
+        <div id="inputsTab" class="tab-content active">
+            <div class="card">
+                <h2>📍 Well Configuration</h2>
+                
+                <div class="control-group">
+                    <label>
+                        True Vertical Depth
+                        <span class="value-badge" id="tvdDisplay">11,921 ft</span>
+                    </label>
+                    <input type="range" id="tvd" min="5000" max="20000" value="11921" step="100">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Measured Depth
+                        <span class="value-badge" id="mdDisplay">22,000 ft</span>
+                    </label>
+                    <input type="range" id="md" min="5000" max="30000" value="22000" step="100">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Tubing Diameter
+                        <span class="value-badge" id="diameterDisplay">3.50 in</span>
+                    </label>
+                    <input type="range" id="diameter" min="2.0" max="5.5" value="3.5" step="0.25">
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>💧 Fluid Properties</h2>
+                
+                <div class="control-group">
+                    <label>
+                        Pump Rate
+                        <span class="value-badge" id="rateDisplay">90 BPM</span>
+                    </label>
+                    <input type="range" id="rate" min="20" max="120" value="90" step="5">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Fluid Density
+                        <span class="value-badge" id="densityDisplay">8.34 ppg</span>
+                    </label>
+                    <input type="range" id="density" min="8.0" max="10.0" value="8.34" step="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Sand Concentration
+                        <span class="value-badge" id="sandDisplay">0.00 ppg</span>
+                    </label>
+                    <input type="range" id="sand" min="0" max="3" value="0" step="0.25">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Friction Reducer
+                        <span class="value-badge" id="frDisplay">60%</span>
+                    </label>
+                    <input type="range" id="frictionReducer" min="0" max="70" value="60" step="5">
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🎯 Formation</h2>
+                
+                <div class="control-group">
+                    <label>
+                        ISIP (Formation Pressure)
+                        <span class="value-badge" id="isipDisplay">5,800 psi</span>
+                    </label>
+                    <input type="range" id="isip" min="3000" max="8000" value="5800" step="100">
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>⚡ Quick Presets</h2>
+                <div class="quick-presets">
+                    <button class="preset-button" onclick="loadPreset('low')">Low Rate</button>
+                    <button class="preset-button" onclick="loadPreset('typical')">Typical Job</button>
+                    <button class="preset-button" onclick="loadPreset('high')">High Rate</button>
+                    <button class="preset-button" onclick="loadPreset('sand')">High Sand</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Tab -->
+        <div id="resultsTab" class="tab-content">
+            <div class="card">
+                <h2>📊 Pressure Breakdown</h2>
+                
+                <div class="pressure-display">
+                    <div class="pressure-card hydro">
+                        <h3>Hydrostatic</h3>
+                        <div class="value" id="hydroValue">5,170</div>
+                        <div class="unit">psi</div>
+                    </div>
+                    
+                    <div class="pressure-card friction">
+                        <h3>Friction</h3>
+                        <div class="value" id="frictionValue">830</div>
+                        <div class="unit">psi</div>
+                    </div>
+                    
+                    <div class="pressure-card formation">
+                        <h3>Formation</h3>
+                        <div class="value" id="formationValue">5,800</div>
+                        <div class="unit">psi</div>
+                    </div>
+                    
+                    <div class="pressure-card total">
+                        <h3>Total Surface Pressure</h3>
+                        <div class="value" id="totalValue">11,800</div>
+                        <div class="unit">psi</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="bar hydro" id="barHydro">
+                        <span id="barHydroText">5,170</span>
+                        <div class="bar-label">Hydro</div>
+                    </div>
+                    <div class="bar friction" id="barFriction">
+                        <span id="barFrictionText">830</span>
+                        <div class="bar-label">Friction</div>
+                    </div>
+                    <div class="bar formation" id="barFormation">
+                        <span id="barFormationText">5,800</span>
+                        <div class="bar-label">Formation</div>
+                    </div>
+                    <div class="bar total" id="barTotal">
+                        <span id="barTotalText">11,800</span>
+                        <div class="bar-label">Total</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🔬 Flow Analysis</h2>
+                
+                <div class="flow-regime">
+                    <div style="font-weight: 600; color: #2c3e50;">Flow Regime</div>
+                    <div class="regime-badge turbulent" id="regimeBadge">TURBULENT</div>
+                    <div style="margin-top: 10px; color: #7f8c8d; font-size: 0.9em;">
+                        Reynolds: <strong id="reynoldsValue">400,000</strong>
+                    </div>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="result-item">
+                        <h4>Velocity</h4>
+                        <div class="value" id="velocityValue">9.4</div>
+                        <div class="unit">ft/s</div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <h4>Friction Factor</h4>
+                        <div class="value" id="frictionFactorValue">0.0062</div>
+                        <div class="unit">f</div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <h4>Lateral Length</h4>
+                        <div class="value" id="lateralValue">10,079</div>
+                        <div class="unit">ft</div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <h4>Hydraulic HP</h4>
+                        <div class="value" id="hhpValue">3,456</div>
+                        <div class="unit">HHP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info Tab -->
+        <div id="infoTab" class="tab-content">
+            <div class="card">
+                <h2>📚 Key Equations</h2>
+                
+                <div class="equation-box">
+                    <strong>Hydrostatic Pressure:</strong><br>
+                    P = 0.052 × ρ × TVD
+                </div>
+                
+                <div class="equation-box">
+                    <strong>Fluid Velocity:</strong><br>
+                    v = Q / (2.448 × A)
+                </div>
+                
+                <div class="equation-box">
+                    <strong>Reynolds Number:</strong><br>
+                    Re = 928ρvD / μ
+                </div>
+                
+                <div class="equation-box">
+                    <strong>Darcy-Weisbach:</strong><br>
+                    ΔP = fLρv² / (2D × 144)
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>ℹ️ About</h2>
+                
+                <div class="info-section">
+                    <h3>Purpose</h3>
+                    <p>This app calculates friction pressure during hydraulic fracturing operations using industry-standard equations.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Flow Regimes</h3>
+                    <p><strong>Laminar (Re < 2,300):</strong> Smooth, layered flow<br>
+                    <strong>Turbulent (Re > 4,000):</strong> Chaotic flow with higher friction</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Usage Tips</h3>
+                    <p>• Start with typical values and adjust<br>
+                    • Use quick presets for common scenarios<br>
+                    • Add to home screen for offline access<br>
+                    • Works without internet connection</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+        
+        // Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
+        
+        document.getElementById('installPrompt').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installPrompt').classList.remove('show');
+            }
+        });
+        
+        // Tab Switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Get all inputs
+        const inputs = {
+            rate: document.getElementById('rate'),
+            tvd: document.getElementById('tvd'),
+            md: document.getElementById('md'),
+            sand: document.getElementById('sand'),
+            density: document.getElementById('density'),
+            diameter: document.getElementById('diameter'),
+            frictionReducer: document.getElementById('frictionReducer'),
+            isip: document.getElementById('isip')
+        };
+        
+        // Add event listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', () => {
+                updateDisplays();
+                calculate();
+            });
+        });
+        
+        function updateDisplays() {
+            document.getElementById('rateDisplay').textContent = inputs.rate.value + ' BPM';
+            document.getElementById('tvdDisplay').textContent = parseInt(inputs.tvd.value).toLocaleString() + ' ft';
+            document.getElementById('mdDisplay').textContent = parseInt(inputs.md.value).toLocaleString() + ' ft';
+            document.getElementById('sandDisplay').textContent = parseFloat(inputs.sand.value).toFixed(2) + ' ppg';
+            document.getElementById('densityDisplay').textContent = parseFloat(inputs.density.value).toFixed(2) + ' ppg';
+            document.getElementById('diameterDisplay').textContent = parseFloat(inputs.diameter.value).toFixed(2) + ' in';
+            document.getElementById('frDisplay').textContent = inputs.frictionReducer.value + '%';
+            document.getElementById('isipDisplay').textContent = parseInt(inputs.isip.value).toLocaleString() + ' psi';
+        }
+        
+        function calculate() {
+            const rate = parseFloat(inputs.rate.value);
+            const tvd = parseFloat(inputs.tvd.value);
+            const md = parseFloat(inputs.md.value);
+            const sand = parseFloat(inputs.sand.value);
+            const density = parseFloat(inputs.density.value);
+            const diameter = parseFloat(inputs.diameter.value);
+            const frEfficiency = parseFloat(inputs.frictionReducer.value) / 100;
+            const isip = parseFloat(inputs.isip.value);
+            
+            // Calculations
+            const hydrostatic = 0.052 * density * tvd;
+            const area = Math.PI * Math.pow(diameter / 2, 2);
+            const velocity = rate / (2.448 * area);
+            const viscosity = 1.0;
+            const reynolds = (928 * density * velocity * diameter) / viscosity;
+            
+            let regime = 'TURBULENT';
+            let regimeClass = 'turbulent';
+            if (reynolds < 2300) {
+                regime = 'LAMINAR';
+                regimeClass = 'laminar';
+            }
+            
+            let frictionFactor;
+            if (reynolds < 2300) {
+                frictionFactor = 64 / reynolds;
+            } else {
+                const roughness = 0.0018;
+                frictionFactor = 0.25 / Math.pow(Math.log10(roughness/3.7 + 5.74/Math.pow(reynolds, 0.9)), 2);
+            }
+            
+            const densityLbFt3 = density * 7.48;
+            const diameterFt = diameter / 12;
+            let frictionPressure = (frictionFactor * md * densityLbFt3 * Math.pow(velocity, 2)) / (2 * diameterFt * 144);
+            
+            const sandFactor = 1 + (sand * 0.15);
+            frictionPressure *= sandFactor;
+            frictionPressure *= (1 - frEfficiency);
+            
+            const totalPressure = hydrostatic + frictionPressure + isip;
+            const hhp = (totalPressure * rate) / 40.8;
+            const lateral = md - tvd;
+            
+            // Update displays
+            document.getElementById('hydroValue').textContent = Math.round(hydrostatic).toLocaleString();
+            document.getElementById('frictionValue').textContent = Math.round(frictionPressure).toLocaleString();
+            document.getElementById('formationValue').textContent = Math.round(isip).toLocaleString();
+            document.getElementById('totalValue').textContent = Math.round(totalPressure).toLocaleString();
+            
+            document.getElementById('velocityValue').textContent = velocity.toFixed(1);
+            document.getElementById('frictionFactorValue').textContent = frictionFactor.toFixed(4);
+            document.getElementById('lateralValue').textContent = Math.round(lateral).toLocaleString();
+            document.getElementById('hhpValue').textContent = Math.round(hhp).toLocaleString();
+            document.getElementById('reynoldsValue').textContent = Math.round(reynolds).toLocaleString();
+            
+            const regimeBadge = document.getElementById('regimeBadge');
+            regimeBadge.textContent = regime;
+            regimeBadge.className = 'regime-badge ' + regimeClass;
+            
+            // Update bars
+            const maxPressure = Math.max(hydrostatic, frictionPressure, isip, totalPressure);
+            const scale = 180 / maxPressure;
+            
+            document.getElementById('barHydro').style.height = (hydrostatic * scale) + 'px';
+            document.getElementById('barFriction').style.height = (frictionPressure * scale) + 'px';
+            document.getElementById('barFormation').style.height = (isip * scale) + 'px';
+            document.getElementById('barTotal').style.height = (totalPressure * scale) + 'px';
+            
+            document.getElementById('barHydroText').textContent = Math.round(hydrostatic).toLocaleString();
+            document.getElementById('barFrictionText').textContent = Math.round(frictionPressure).toLocaleString();
+            document.getElementById('barFormationText').textContent = Math.round(isip).toLocaleString();
+            document.getElementById('barTotalText').textContent = Math.round(totalPressure).toLocaleString();
+        }
+        
+        function loadPreset(type) {
+            switch(type) {
+                case 'low':
+                    inputs.rate.value = 40;
+                    inputs.sand.value = 0;
+                    inputs.frictionReducer.value = 70;
+                    break;
+                case 'typical':
+                    inputs.rate.value = 90;
+                    inputs.sand.value = 1;
+                    inputs.frictionReducer.value = 60;
+                    break;
+                case 'high':
+                    inputs.rate.value = 110;
+                    inputs.sand.value = 0.5;
+                    inputs.frictionReducer.value = 65;
+                    break;
+                case 'sand':
+                    inputs.rate.value = 70;
+                    inputs.sand.value = 2.5;
+                    inputs.frictionReducer.value = 55;
+                    break;
+            }
+            updateDisplays();
+            calculate();
+        }
+        
+        // Initial calculation
+        updateDisplays();
+        calculate();
+    </script>
+</body>
+</html>
